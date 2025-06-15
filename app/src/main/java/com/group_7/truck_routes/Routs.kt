@@ -2,7 +2,7 @@ package com.group_7.truck_routes
 
 import kotlinx.serialization.Serializable
 
-sealed class routs {
+sealed class Routs {
     @Serializable
     object Home
 

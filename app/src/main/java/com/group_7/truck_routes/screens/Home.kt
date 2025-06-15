@@ -1,4 +1,4 @@
-package com.group_7.truck_routes.Screens
+package com.group_7.truck_routes.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.group_7.truck_routes.routs
+import com.group_7.truck_routes.Routs
 
 @Composable
 fun Home(navController: NavController) {
@@ -97,12 +97,12 @@ fun Home(navController: NavController) {
         Button(onClick = {
             if (userStartPoint.isNotEmpty() && userDestination.isNotEmpty() && userRoute.isNotEmpty()) {
                 navController.navigate(
-                    routs.Maps(
-                        startPoint =  userStartPoint,
+                    Routs.Maps(
+                        startPoint = userStartPoint,
                         destination = userDestination,
                         route = userRoute
                     )
-               )
+                )
             } else {
                 Toast.makeText(
                     navController.context,

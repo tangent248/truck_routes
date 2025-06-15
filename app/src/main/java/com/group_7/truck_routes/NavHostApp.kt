@@ -5,21 +5,20 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.group_7.truck_routes.Screens.Home
-import com.group_7.truck_routes.routs.Home
-import com.group_7.truck_routes.Screens.Maps
+import com.group_7.truck_routes.screens.Home
+import com.group_7.truck_routes.screens.Maps
 
 
 @Composable
 fun NavHostApp() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = routs.Home) {
-        composable<routs.Home>
-        {Home(navController)}
+    NavHost(navController = navController, startDestination = Routs.Home) {
+        composable<Routs.Home>
+        { Home(navController) }
 
-        composable<routs.Maps> {
-            val data = it.toRoute<routs.Maps>()
+        composable<Routs.Maps> {
+            val data = it.toRoute<Routs.Maps>()
             Maps(
                 navController,
                 startPoint = data.startPoint,
