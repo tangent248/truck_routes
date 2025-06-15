@@ -1,4 +1,4 @@
-package com.group_7.truck_routes
+package com.group_7.truck_routes.Screens
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -26,12 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.group_7.truck_routes.routs
 
 @Composable
 fun Home(navController: NavController) {
-    var startPoint by remember { mutableStateOf(value = "") }
-    var destination by remember { mutableStateOf(value = "") }
-    var route by remember { mutableStateOf(value = "") }
+    var userStartPoint by remember { mutableStateOf(value = "") }
+    var userDestination by remember { mutableStateOf(value = "") }
+    var userRoute by remember { mutableStateOf(value = "") }
 
 
     Column(
@@ -49,9 +50,9 @@ fun Home(navController: NavController) {
         Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedTextField(
-            value = startPoint,
+            value = userStartPoint,
             onValueChange = {
-                startPoint = it
+                userStartPoint = it
             },
             label = { Text("Start Point") },
             placeholder = { Text("Enter Start Point") },
@@ -65,9 +66,9 @@ fun Home(navController: NavController) {
 
             )
         OutlinedTextField(
-            value = destination,
+            value = userDestination,
             onValueChange = {
-                destination = it
+                userDestination = it
             },
             label = { Text("Destination") },
             placeholder = { Text("Enter Destination") },
@@ -78,9 +79,9 @@ fun Home(navController: NavController) {
             singleLine = true
         )
         OutlinedTextField(
-            value = route,
+            value = userRoute,
             onValueChange = {
-                route = it
+                userRoute = it
             },
             label = { Text("Routes") },
             placeholder = { Text("select route") },
@@ -94,12 +95,12 @@ fun Home(navController: NavController) {
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(onClick = {
-            if (startPoint.isNotEmpty() && destination.isNotEmpty() && route.isNotEmpty()) {
+            if (userStartPoint.isNotEmpty() && userDestination.isNotEmpty() && userRoute.isNotEmpty()) {
                 navController.navigate(
-                    Routs.Maps(
-                        startpoint =  startPoint,
-                        destination = destination,
-                        route = route
+                    routs.Maps(
+                        startPoint =  userStartPoint,
+                        destination = userDestination,
+                        route = userRoute
                     )
                )
             } else {
