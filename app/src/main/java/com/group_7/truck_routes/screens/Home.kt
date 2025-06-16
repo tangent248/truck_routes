@@ -1,6 +1,5 @@
 package com.group_7.truck_routes.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -104,11 +103,18 @@ fun Home(navController: NavController) {
                     )
                 )
             } else {
-                Toast.makeText(
-                    navController.context,
-                    "Please fill all the fields",
-                    Toast.LENGTH_SHORT
-                ).show()
+                navController.navigate(
+                    Routs.Maps(
+                        startPoint = userStartPoint,
+                        destination = userDestination,
+                        route = userRoute
+                    )
+                )
+//                Toast.makeText(
+//                    navController.context,
+//                    "Please fill all the fields",
+//                    Toast.LENGTH_SHORT
+//                ).show()
             }
         }, modifier = Modifier.fillMaxWidth()) {
             Text(text = "Submit")
