@@ -1,6 +1,7 @@
 package com.group_7.truck_routes.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,10 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -23,6 +26,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.group_7.truck_routes.Routs
@@ -32,6 +37,10 @@ fun Home(navController: NavController) {
     var userStartPoint by remember { mutableStateOf(value = "") }
     var userDestination by remember { mutableStateOf(value = "") }
     var userRoute by remember { mutableStateOf(value = "") }
+
+    var isExpanded by remember { mutableStateOf(false) }
+
+
 
 
     Column(
@@ -77,20 +86,37 @@ fun Home(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
-        OutlinedTextField(
-            value = userRoute,
-            onValueChange = {
-                userRoute = it
+
+        DropDownMenu(
+            label = userRoute,
+            placeholder = "select route",
+            expanded = isExpanded,
+            onExpandedChange = {
+                isExpanded = it
             },
-            label = { Text("Routes") },
-            placeholder = { Text("select route") },
-            leadingIcon = {
-                Icon(imageVector = Icons.Default.Info, contentDescription = null)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            onOptionSelected = { unit ->
+                userRoute = unit
+                isExpanded = false
+
+            }
+
 
         )
+
+//        OutlinedTextField(
+//            value = userRoute,
+//            onValueChange = {
+//                userRoute = it
+//            },
+//            label = { Text("Routes") },
+//            placeholder = { Text("select route") },
+//            leadingIcon = {
+//                Icon(imageVector = Icons.Default.Info, contentDescription = null)
+//            },
+//            modifier = Modifier.fillMaxWidth(),
+//            singleLine = true
+//
+//        )
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(onClick = {
@@ -103,7 +129,7 @@ fun Home(navController: NavController) {
                     )
                 )
             } else {
-                navController.navigate(
+                navController.navigate(          //delete after testing
                     Routs.Maps(
                         startPoint = userStartPoint,
                         destination = userDestination,
@@ -123,3 +149,53 @@ fun Home(navController: NavController) {
 
 
 }
+
+@Composable
+fun DropDownMenu(
+    label: String,
+    placeholder: String,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onOptionSelected: (String) -> Unit,
+) {
+    Box {
+        Button(
+            onClick = { onExpandedChange(!expanded) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = if (label.isNotBlank()) label else placeholder,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null,
+                modifier = Modifier.rotate(if (expanded) 180f else 0f)
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) },
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            listOf(
+                "mileage",
+                "speed",
+                "toll"
+            ).forEach { unit ->
+                DropdownMenuItem(
+                    text = { Text(text = unit) },
+                    onClick = {
+                        onExpandedChange(false)
+                        onOptionSelected(unit)
+                    }
+                )
+            }
+        }
+    }
+}
+
