@@ -103,20 +103,7 @@ fun Home(navController: NavController) {
 
         )
 
-//        OutlinedTextField(
-//            value = userRoute,
-//            onValueChange = {
-//                userRoute = it
-//            },
-//            label = { Text("Routes") },
-//            placeholder = { Text("select route") },
-//            leadingIcon = {
-//                Icon(imageVector = Icons.Default.Info, contentDescription = null)
-//            },
-//            modifier = Modifier.fillMaxWidth(),
-//            singleLine = true
-//
-//        )
+
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(onClick = {
