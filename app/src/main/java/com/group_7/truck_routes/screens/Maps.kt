@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -18,6 +20,15 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.group_7.truck_routes.ApiService
+import com.group_7.truck_routes.RetrofitInstance
+import com.group_7.truck_routes.model.Destination
+import com.group_7.truck_routes.model.LatLng
+import com.group_7.truck_routes.model.Location
+import com.group_7.truck_routes.model.Origin
+import com.group_7.truck_routes.model.PostRequest
+import com.group_7.truck_routes.model.Route
+import com.group_7.truck_routes.model.RouteModifiers
 import com.group_7.truck_routes.viewModel.MapViewModel
 
 @Composable
@@ -30,6 +41,58 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
     val userLocation by mapViewModel.userLocation
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
+    val apiService: ApiService by lazy { RetrofitInstance.getApiService() }
+
+    var posts by remember { mutableStateOf<List<Route>>(emptyList()) }
+
+    //converts string to lat long
+    fun stringToLocation(input: String): Location? {
+        return try {
+            val parts = input.split(",")
+            val lat = parts[0].trim().toDouble()
+            val lng = parts[1].trim().toDouble()
+            Location(LatLng(lat, lng))
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+
+
+    LaunchedEffect(Unit) {
+
+        val originLocation = stringToLocation(startPoint)
+        val destinationLocation = stringToLocation(destination)
+
+
+        if (originLocation == null || destinationLocation == null) {
+            Toast.makeText(context, "Invalid coordinates", Toast.LENGTH_LONG).show()
+            return@LaunchedEffect
+        }
+
+        val routeRequest = PostRequest(
+            origin = Origin(location = originLocation),
+            destination = Destination(location = destinationLocation),
+            travelMode = "DRIVE",
+            routingPreference = "TRAFFIC_AWARE",
+            computeAlternativeRoutes = false,
+            routeModifiers = RouteModifiers(
+                avoidTolls = false,
+                avoidHighways = false,
+                avoidFerries = false
+            ),
+            languageCode = "en-US",
+            units = "METRIC"
+        )
+
+        try {
+            val response = apiService.getRoutes(routeRequest)
+            posts = response.routes
+            Toast.makeText(context, "S ${response}", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(context, "API Error: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
 
     // Handle permission requests for accessing fine location
     val permissionLauncher = rememberLauncherForActivityResult(
