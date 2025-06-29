@@ -16,6 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.maps.android.PolyUtil
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -45,6 +47,9 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
 
     var posts by remember { mutableStateOf<List<Route>>(emptyList()) }
 
+    var polylinePoints by remember { mutableStateOf<List<com.google.android.gms.maps.model.LatLng>>(emptyList()) }
+
+
     //converts string to lat long
     fun stringToLocation(input: String): Location? {
         return try {
@@ -56,7 +61,6 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
             null
         }
     }
-
 
 
     LaunchedEffect(Unit) {
@@ -88,11 +92,22 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
         try {
             val response = apiService.getRoutes(routeRequest)
             posts = response.routes
+
+
+            val encodedPolyline = response.routes.firstOrNull()?.polyline?.encodedPolyline
+            if (encodedPolyline != null) {
+                polylinePoints = PolyUtil.decode(encodedPolyline)
+            }
+
+
             Toast.makeText(context, "S ${response}", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(context, "API Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
+
+
+
 
     // Handle permission requests for accessing fine location
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -143,6 +158,13 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
             )
             // Move the camera to the user's location with a zoom level of 10f
             cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
+        }
+        if (polylinePoints.isNotEmpty()) {
+            Polyline(
+                points = polylinePoints,
+                color = androidx.compose.ui.graphics.Color.Blue,
+                width = 5f
+            )
         }
     }
 }
