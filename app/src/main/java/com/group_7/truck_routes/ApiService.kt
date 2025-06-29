@@ -8,7 +8,7 @@ import retrofit2.http.POST
 
 interface ApiService {
     @Headers(
-        "X-Goog-Api-Key: AIzaSyAGX8CifFJ8j8GChyKgNd3TJcXYDq_Ix4A",
+        "X-Goog-Api-Key: ",
         "X-Goog-FieldMask: routes.duration,routes.distanceMeters,routes.polyline"
     )
     @POST("directions/v2:computeRoutes")
