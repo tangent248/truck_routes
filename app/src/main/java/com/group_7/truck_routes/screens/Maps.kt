@@ -45,7 +45,9 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
 
     val apiService: ApiService by lazy { RetrofitInstance.getApiService() }
 
-    var posts by remember { mutableStateOf<List<Route>>(emptyList()) }
+    var postsSpeed by remember { mutableStateOf<List<Route>>(emptyList()) }
+    var postsMileage by remember { mutableStateOf<List<Route>>(emptyList()) }
+    var postsAvoidToll by remember { mutableStateOf<List<Route>>(emptyList()) }
 
     var polylinePoints by remember { mutableStateOf<List<com.google.android.gms.maps.model.LatLng>>(emptyList()) }
 
@@ -74,14 +76,42 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
             return@LaunchedEffect
         }
 
-        val routeRequest = PostRequest(
+        val routeRequestSpeed = PostRequest(
+            origin = Origin(location = originLocation),
+            destination = Destination(location = destinationLocation),
+            travelMode = "DRIVE",
+            routingPreference = "TRAFFIC_AWARE_OPTIMAL",
+            computeAlternativeRoutes = true,
+            routeModifiers = RouteModifiers(
+                avoidTolls = false,
+                avoidHighways = false,
+                avoidFerries = true
+            ),
+            languageCode = "en-US",
+            units = "METRIC"
+        )
+        val routeRequestMileage = PostRequest(
             origin = Origin(location = originLocation),
             destination = Destination(location = destinationLocation),
             travelMode = "DRIVE",
             routingPreference = "TRAFFIC_AWARE",
-            computeAlternativeRoutes = false,
+            computeAlternativeRoutes = true,
             routeModifiers = RouteModifiers(
                 avoidTolls = false,
+                avoidHighways = false,
+                avoidFerries = true
+            ),
+            languageCode = "en-US",
+            units = "METRIC"
+        )
+        val routeRequestAvoidToll = PostRequest(
+            origin = Origin(location = originLocation),
+            destination = Destination(location = destinationLocation),
+            travelMode = "DRIVE",
+            routingPreference = "TRAFFIC_AWARE",
+            computeAlternativeRoutes = true,
+            routeModifiers = RouteModifiers(
+                avoidTolls = true,
                 avoidHighways = false,
                 avoidFerries = false
             ),
@@ -90,17 +120,28 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
         )
 
         try {
-            val response = apiService.getRoutes(routeRequest)
-            posts = response.routes
+            val responseSpeed = apiService.getRoutes(routeRequestSpeed)
 
+            val responseMileage = apiService.getRoutes(routeRequestMileage)
 
-            val encodedPolyline = response.routes.firstOrNull()?.polyline?.encodedPolyline
+            val responseAvoidToll = apiService.getRoutes(routeRequestAvoidToll)
+
+            postsSpeed = responseSpeed.routes
+            postsMileage = responseMileage.routes
+            postsAvoidToll = responseAvoidToll.routes
+
+            val routePreference = when (route) {
+                "speed" -> responseSpeed
+                "mileage" -> responseMileage
+                "avoidToll" -> responseAvoidToll
+                else -> responseSpeed
+            }
+
+            val encodedPolyline = routePreference.routes.firstOrNull()?.polyline?.encodedPolyline
             if (encodedPolyline != null) {
                 polylinePoints = PolyUtil.decode(encodedPolyline)
             }
 
-
-            Toast.makeText(context, "S ${response}", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(context, "API Error: ${e.message}", Toast.LENGTH_LONG).show()
         }

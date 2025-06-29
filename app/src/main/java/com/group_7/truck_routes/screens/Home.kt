@@ -34,8 +34,8 @@ import com.group_7.truck_routes.Routs
 
 @Composable
 fun Home(navController: NavController) {
-    var userStartPoint by remember { mutableStateOf(value = "22.804567,86.202875") }
-    var userDestination by remember { mutableStateOf(value = "22.574355,88.362873") }
+    var userStartPoint by remember { mutableStateOf(value = "22.771186,86.2439") }
+    var userDestination by remember { mutableStateOf(value = "22.955874,86.055129") }
     var userRoute by remember { mutableStateOf(value = "") }
 
     var isExpanded by remember { mutableStateOf(false) }
