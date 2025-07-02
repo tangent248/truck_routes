@@ -1,5 +1,6 @@
 package com.group_7.truck_routes.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -103,20 +104,6 @@ fun Home(navController: NavController) {
 
         )
 
-//        OutlinedTextField(
-//            value = userRoute,
-//            onValueChange = {
-//                userRoute = it
-//            },
-//            label = { Text("Routes") },
-//            placeholder = { Text("select route") },
-//            leadingIcon = {
-//                Icon(imageVector = Icons.Default.Info, contentDescription = null)
-//            },
-//            modifier = Modifier.fillMaxWidth(),
-//            singleLine = true
-//
-//        )
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(onClick = {
@@ -129,18 +116,12 @@ fun Home(navController: NavController) {
                     )
                 )
             } else {
-                navController.navigate(          //delete after testing
-                    Routs.Maps(
-                        startPoint = userStartPoint,
-                        destination = userDestination,
-                        route = userRoute
-                    )
-                )
-//                Toast.makeText(
-//                    navController.context,
-//                    "Please fill all the fields",
-//                    Toast.LENGTH_SHORT
-//                ).show()
+
+                Toast.makeText(
+                    navController.context,
+                    "Please fill all the fields",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }, modifier = Modifier.fillMaxWidth()) {
             Text(text = "Submit")

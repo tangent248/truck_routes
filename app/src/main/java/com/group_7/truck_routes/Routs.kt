@@ -7,6 +7,12 @@ sealed class Routs {
     object Home
 
     @Serializable
+    object Loginscreen
+
+    @Serializable
+    object Registerscreen
+
+    @Serializable
     data class Maps(
         val startPoint: String,
         val destination: String,

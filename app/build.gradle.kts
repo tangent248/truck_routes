@@ -59,6 +59,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation("androidx.compose.ui:ui:1.8.3")
+    implementation("androidx.compose.material3:material3:1.3.2")
+
 
     //retrofit
     implementation ("com.google.code.gson:gson:2.11.0")
