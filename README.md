@@ -57,7 +57,7 @@ Although it’s a prototype, it lays the foundation for a fully integrated navig
 
 ## 🧪 Real-World Use Case
 
-This app was built as part of our internship at Tata Technologies in Summer 2024.  
+This app was built as part of our internship at Tata Technologies in Summer 2025.  
 The idea was to create a working **concept demo** of a truck-focused navigation system for **Tata Motors**. We worked as a small R&D team, experimenting with:
 
 - Route APIs
