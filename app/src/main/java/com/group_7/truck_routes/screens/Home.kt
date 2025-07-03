@@ -35,12 +35,11 @@ import com.group_7.truck_routes.Routs
 
 @Composable
 fun Home(navController: NavController) {
-    var userStartPoint by remember { mutableStateOf(value = "22.771186,86.2439") }
-    var userDestination by remember { mutableStateOf(value = "22.955874,86.055129") }
+    var userStartPoint by remember { mutableStateOf(value = " 22.763458,86.238714") }
+    var userDestination by remember { mutableStateOf(value = "18.651402,73.817583") }
     var userRoute by remember { mutableStateOf(value = "") }
 
     var isExpanded by remember { mutableStateOf(false) }
-
 
 
 
@@ -164,8 +163,8 @@ fun DropDownMenu(
                 .fillMaxWidth()
         ) {
             listOf(
-                "mileage",
                 "speed",
+                "mileage",
                 "toll"
             ).forEach { unit ->
                 DropdownMenuItem(
