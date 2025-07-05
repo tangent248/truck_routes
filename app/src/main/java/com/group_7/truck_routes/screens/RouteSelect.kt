@@ -1,6 +1,7 @@
 package com.group_7.truck_routes.screens
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -29,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -53,7 +53,10 @@ import kotlinx.coroutines.tasks.await
 
 
 @Composable
-fun RouteSelectionScreen(navController: NavController, startPoint: String, destination: String) {
+fun RouteSelectionScreen(navController: NavController,
+                         startPoint: String,
+                         destination: String,
+                         loadTons: Double) {
 
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -61,6 +64,22 @@ fun RouteSelectionScreen(navController: NavController, startPoint: String, desti
 
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     var routes by remember { mutableStateOf<Map<String, Route?>>(emptyMap()) }
+
+    var startAddress by remember { mutableStateOf<String?>(null) }
+    var destinationAddress by remember { mutableStateOf<String?>(null) }
+
+     fun reverseGeocode(context: Context, latLng: LatLng): String? {
+        return try {
+            val geocoder = android.location.Geocoder(context)
+            val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+            val address = addresses?.firstOrNull()
+
+            // Use locality (e.g., "Pune") or subAdminArea fallback
+            address?.locality ?: address?.subAdminArea ?: address?.adminArea
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     // Convert to LatLng
     fun stringToLatLng(input: String): LatLng? {
@@ -72,6 +91,15 @@ fun RouteSelectionScreen(navController: NavController, startPoint: String, desti
         }
     }
 
+    fun calculateCost(distanceMeters: Int): String {
+        val km = distanceMeters / 1000.0
+        val costPerKgPerKm = 8.0 / 1000.0
+        val loadKg = loadTons * 1000
+        val cost = costPerKgPerKm * loadKg * km
+        return "₹${String.format("%.2f", cost)}"
+    }
+
+
     // Fetch user location and routes
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -82,6 +110,9 @@ fun RouteSelectionScreen(navController: NavController, startPoint: String, desti
 
             if (start != null && end != null) {
                 try {
+                    startAddress = reverseGeocode(context, start)
+                    destinationAddress = reverseGeocode(context, end)
+
                     val loc = fusedLocationClient.lastLocation.await()
                     val userLatLng = LatLng(loc.latitude, loc.longitude)
                     userLocation = userLatLng
@@ -112,11 +143,6 @@ fun RouteSelectionScreen(navController: NavController, startPoint: String, desti
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFF00CFFF), Color(0xFF87F1FC))
-                )
-            )
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -124,10 +150,9 @@ fun RouteSelectionScreen(navController: NavController, startPoint: String, desti
 
         item {
             Text(
-                text = "Pune ✈️ Mumbai",
+                text = "${startAddress ?: "Start"} 🚛 ➡️ ${destinationAddress ?: "Destination"}",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
@@ -137,7 +162,6 @@ fun RouteSelectionScreen(navController: NavController, startPoint: String, desti
             Text(
                 text = "Choose your preferred route option",
                 fontSize = 14.sp,
-                color = Color.White,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
@@ -151,6 +175,7 @@ fun RouteSelectionScreen(navController: NavController, startPoint: String, desti
                 time = routes["speed"]?.let { formatDuration(it.duration) } ?: "Loading...",
                 distance = routes["speed"]?.let { "${it.distanceMeters / 1000.0} km" }
                     ?: "Loading...",
+                cost = routes["speed"]?.let { calculateCost(it.distanceMeters) } ?: "Loading...",
                 description = "Fastest route for delivery trucks using major highways with current traffic conditions",
                 tag = "Fastest",
                 tagColor = Color(0xFF0DCAF0),
@@ -172,6 +197,7 @@ fun RouteSelectionScreen(navController: NavController, startPoint: String, desti
                 time = routes["mileage"]?.let { formatDuration(it.duration) } ?: "Loading...",
                 distance = routes["mileage"]?.let { "${it.distanceMeters / 1000.0} km" }
                     ?: "Loading...",
+                cost = routes["mileage"]?.let { calculateCost(it.distanceMeters) } ?: "Loading...",
                 description = "Shorter distance through local roads, perfect for smaller delivery vehicles",
                 tag = "Shortest",
                 tagColor = Color(0xFF0DCAF0),
@@ -193,6 +219,7 @@ fun RouteSelectionScreen(navController: NavController, startPoint: String, desti
                 time = routes["toll"]?.let { formatDuration(it.duration) } ?: "Loading...",
                 distance = routes["toll"]?.let { "${it.distanceMeters / 1000.0} km" }
                     ?: "Loading...",
+                cost = routes["toll"]?.let { calculateCost(it.distanceMeters) } ?: "Loading...",
                 description = "Truck-friendly route avoiding toll roads and weight restrictions",
                 tag = "Commercial",
                 tagColor = Color(0xFF0DCAF0),
@@ -271,6 +298,7 @@ fun RouteCard(
     title: String,
     time: String,
     distance: String,
+    cost: String,
     description: String,
     tag: String? = null,
     tagColor: Color = Color.Blue,
@@ -331,6 +359,15 @@ fun RouteCard(
                         color = Color(0xFF007BFF)
                     )
                     Text(text = "Distance", fontSize = 12.sp)
+                }
+                Column {
+                    Text(
+                        text = cost,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = Color(0xFF007BFF)
+                    )
+                    Text(text = "Est. Fuel Cost", fontSize = 12.sp)
                 }
             }
 

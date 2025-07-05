@@ -3,171 +3,133 @@ package com.group_7.truck_routes.screens
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.android.libraries.places.api.Places
 import com.group_7.truck_routes.Routs
+import com.group_7.truck_routes.components.SearchBar
+import com.group_7.truck_routes.utils.ManifestUtils
+import com.group_7.truck_routes.viewModel.MapViewModel
 
 @Composable
-fun Home(navController: NavController) {
-    var userStartPoint by remember { mutableStateOf(value = " 22.763458,86.238714") }
-    var userDestination by remember { mutableStateOf(value = "18.651402,73.817583") }
-//    var userRoute by remember { mutableStateOf(value = "") }
-//
-//    var isExpanded by remember { mutableStateOf(false) }
+fun Home(mapViewModel: MapViewModel, navController: NavController) {
+    var userStartPoint by remember { mutableStateOf("") }
+    var userDestination by remember { mutableStateOf("") }
+    var loadTons by remember { mutableStateOf("") }
 
+    val selectedStartLocation by mapViewModel.selectedStartLocation
+    val selectedDestinationLocation by mapViewModel.selectedDestinationLocation
+
+    val context = LocalContext.current
+    val apiKey = ManifestUtils.getApiKeyFromManifest(context)
+
+    if (!Places.isInitialized() && apiKey != null) {
+        Places.initialize(context.applicationContext, apiKey)
+    }
+
+    LaunchedEffect(selectedStartLocation) {
+        selectedStartLocation?.let {
+            userStartPoint = "${it.latitude},${it.longitude}"
+        }
+    }
+
+    LaunchedEffect(selectedDestinationLocation) {
+        selectedDestinationLocation?.let {
+            userDestination = "${it.latitude},${it.longitude}"
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Enter details below",
-            style = MaterialTheme.typography.bodyLarge
+            text = "Truck Route Planner",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        OutlinedTextField(
-            value = userStartPoint,
-            onValueChange = {
-                userStartPoint = it
-            },
-            label = { Text("Start Point") },
-            placeholder = { Text("Enter Start Point") },
-            leadingIcon = {
-                Icon(imageVector = Icons.Default.Home, contentDescription = null)
-            },
+        Card(
             modifier = Modifier.fillMaxWidth(),
-
-            singleLine = true,
-
-
-            )
-        OutlinedTextField(
-            value = userDestination,
-            onValueChange = {
-                userDestination = it
-            },
-            label = { Text("Destination") },
-            placeholder = { Text("Enter Destination") },
-            leadingIcon = {
-                Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-//        DropDownMenu(
-//            label = userRoute,
-//            placeholder = "select route",
-//            expanded = isExpanded,
-//            onExpandedChange = {
-//                isExpanded = it
-//            },
-//            onOptionSelected = { unit ->
-//                userRoute = unit
-//                isExpanded = false
-//
-//            }
-//
-//
-//        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Button(onClick = {
-            if (userStartPoint.isNotEmpty() && userDestination.isNotEmpty()) {
-                navController.navigate(
-                    Routs.RouteSelectionScreen(
-                        startPoint = userStartPoint,
-                        destination = userDestination
-                    )
+            elevation = CardDefaults.cardElevation(8.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Start Point",
+                    style = MaterialTheme.typography.labelLarge
                 )
-            } else {
+                SearchBar(onPlaceSelected = { place ->
+                    mapViewModel.selectStartLocation(place, context)
+                })
 
-                Toast.makeText(
-                    navController.context,
-                    "Please fill all the fields",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Text(
+                    text = "Destination Point",
+                    style = MaterialTheme.typography.labelLarge
+                )
+                SearchBar(onPlaceSelected = { place ->
+                    mapViewModel.selectDestinationLocation(place, context)
+                })
+
+                OutlinedTextField(
+                    value = loadTons,
+                    onValueChange = { loadTons = it },
+                    label = { Text("Enter Load (tons)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Button(
+                    onClick = {
+                        if (userStartPoint.isNotEmpty() && userDestination.isNotEmpty() && loadTons.isNotEmpty()) {
+                            val load = loadTons.toDoubleOrNull() ?: 0.0
+                            navController.navigate(
+                                Routs.RouteSelectionScreen(
+                                    startPoint = userStartPoint,
+                                    destination = userDestination,
+                                    loadTons = load
+                                )
+                            )
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Please fill all the fields",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Find Routes")
+                }
             }
-        }, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Submit")
         }
     }
-
-
 }
-
-//@Composable
-//fun DropDownMenu(
-//    label: String,
-//    placeholder: String,
-//    expanded: Boolean,
-//    onExpandedChange: (Boolean) -> Unit,
-//    onOptionSelected: (String) -> Unit,
-//) {
-//    Box {
-//        Button(
-//            onClick = { onExpandedChange(!expanded) },
-//            modifier = Modifier.fillMaxWidth()
-//        ) {
-//            Text(
-//                text = if (label.isNotBlank()) label else placeholder,
-//                maxLines = 1,
-//                overflow = TextOverflow.Ellipsis
-//            )
-//
-//            Icon(
-//                imageVector = Icons.Default.ArrowDropDown,
-//                contentDescription = null,
-//                modifier = Modifier.rotate(if (expanded) 180f else 0f)
-//            )
-//        }
-//
-//        DropdownMenu(
-//            expanded = expanded,
-//            onDismissRequest = { onExpandedChange(false) },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//        ) {
-//            listOf(
-//                "speed",
-//                "mileage",
-//                "toll"
-//            ).forEach { unit ->
-//                DropdownMenuItem(
-//                    text = { Text(text = unit) },
-//                    onClick = {
-//                        onExpandedChange(false)
-//                        onOptionSelected(unit)
-//                    }
-//                )
-//            }
-//        }
-//    }
-//}
-

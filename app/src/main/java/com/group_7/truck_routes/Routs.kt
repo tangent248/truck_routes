@@ -15,7 +15,8 @@ sealed class Routs {
     @Serializable
     data class RouteSelectionScreen(
         val startPoint: String,
-        val destination: String
+        val destination: String,
+        val loadTons: Double
     )
 
     @Serializable

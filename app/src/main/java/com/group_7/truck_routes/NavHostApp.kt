@@ -17,11 +17,15 @@ import com.group_7.truck_routes.viewModel.MapViewModel
 @Composable
 fun NavHostApp() {
     val navController = rememberNavController()
+    val mapViewModel = viewModel<MapViewModel>()
 
     NavHost(navController = navController, startDestination = Routs.Loginscreen) {
 
         composable<Routs.Home>
-        { Home(navController) }
+        { Home(
+            mapViewModel = mapViewModel,
+            navController = navController
+        ) }
 
         composable<Routs.Loginscreen>
         { Loginscreen(navController) }
@@ -34,13 +38,13 @@ fun NavHostApp() {
             RouteSelectionScreen(
                 navController,
                 startPoint = data.startPoint,
-                destination = data.destination
+                destination = data.destination,
+                loadTons = data.loadTons
             )
         }
 
         composable<Routs.Maps> {
             val data = it.toRoute<Routs.Maps>()
-            val mapViewModel = viewModel<MapViewModel>()
 
             Maps(
                 mapViewModel = mapViewModel,
