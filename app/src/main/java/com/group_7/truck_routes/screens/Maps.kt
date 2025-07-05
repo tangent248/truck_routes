@@ -18,20 +18,22 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Button
-
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
-
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -39,15 +41,28 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.PolyUtil
-import com.google.maps.android.compose.*
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.group_7.truck_routes.ApiService
 import com.group_7.truck_routes.R
 import com.group_7.truck_routes.RetrofitInstance
-import com.group_7.truck_routes.model.*
+import com.group_7.truck_routes.model.Destination
+import com.group_7.truck_routes.model.LatLng
+import com.group_7.truck_routes.model.Location
+import com.group_7.truck_routes.model.Origin
+import com.group_7.truck_routes.model.PostRequest
+import com.group_7.truck_routes.model.Route
+import com.group_7.truck_routes.model.RouteModifiers
 import com.group_7.truck_routes.viewModel.MapViewModel
 import com.google.android.gms.maps.model.LatLng as GmsLatLng
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,8 +93,6 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
     var selectedRouteInfo by remember { mutableStateOf<Route?>(null) }
 
 
-
-
     // Helper function to convert a "lat,lng" string to Location object
     fun stringToLocation(input: String): Location? {
         return try {
@@ -108,7 +121,10 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
     }
 
     LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        if (ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            )
             == PackageManager.PERMISSION_GRANTED
         ) {
             mapViewModel.startUpdatingLocationPeriodically(context, fusedLocationClient)
@@ -239,9 +255,13 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
         }
     }
     Box(modifier = Modifier.fillMaxSize()) {
+        val mapProperties = remember {
+            MapProperties(mapType = MapType.HYBRID)
+        }
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
+            properties = mapProperties,
             uiSettings = MapUiSettings(
                 zoomControlsEnabled = false
             )
@@ -251,7 +271,7 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
                     state = MarkerState(position = it),
                     title = "Your Location",
                     icon = BitmapDescriptorFactory.fromResource(R.drawable.arrow),
-                    rotation =  bearing,  /*if (isRotationEnabled) bearing else 0f,*/
+                    rotation = bearing,  /*if (isRotationEnabled) bearing else 0f,*/
                     flat = true
                 )
                 LaunchedEffect(userLocation) {
@@ -285,7 +305,7 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
                 )
             }
         }
-        if(showBottomSheet){
+        if (showBottomSheet) {
             ModalBottomSheet(
                 onDismissRequest = {
                     showBottomSheet = false
@@ -307,10 +327,12 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
                 )
             }
         }
-        Row(modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .padding(16.dp),
-            horizontalArrangement = Arrangement.End) {
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
 //            Button(
 //                onClick = { isRotationEnabled = !isRotationEnabled },
 //

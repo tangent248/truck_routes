@@ -13,6 +13,12 @@ sealed class Routs {
     object Registerscreen
 
     @Serializable
+    data class RouteSelectionScreen(
+        val startPoint: String,
+        val destination: String
+    )
+
+    @Serializable
     data class Maps(
         val startPoint: String,
         val destination: String,

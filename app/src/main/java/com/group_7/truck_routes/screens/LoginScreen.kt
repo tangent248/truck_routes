@@ -15,7 +15,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -65,12 +68,11 @@ fun Loginscreen(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = {
             Log.i("Credential", "Email: $email Password: $password")
-            if (email.isNotEmpty() && password.isNotEmpty()){
+            if (email.isNotEmpty() && password.isNotEmpty()) {
                 navController.navigate(
                     Routs.Home
                 )
-            }
-            else{
+            } else {
                 Toast.makeText(
                     navController.context,
                     "Please fill all the fields",

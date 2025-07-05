@@ -10,6 +10,7 @@ import com.group_7.truck_routes.screens.Home
 import com.group_7.truck_routes.screens.Loginscreen
 import com.group_7.truck_routes.screens.Maps
 import com.group_7.truck_routes.screens.Registerscreen
+import com.group_7.truck_routes.screens.RouteSelectionScreen
 import com.group_7.truck_routes.viewModel.MapViewModel
 
 
@@ -28,10 +29,18 @@ fun NavHostApp() {
         composable<Routs.Registerscreen>
         { Registerscreen(navController) }
 
+        composable<Routs.RouteSelectionScreen> {
+            val data = it.toRoute<Routs.RouteSelectionScreen>()
+            RouteSelectionScreen(
+                navController,
+                startPoint = data.startPoint,
+                destination = data.destination
+            )
+        }
+
         composable<Routs.Maps> {
             val data = it.toRoute<Routs.Maps>()
             val mapViewModel = viewModel<MapViewModel>()
-            Maps(mapViewModel, data.startPoint, data.destination, data.route)
 
             Maps(
                 mapViewModel = mapViewModel,
