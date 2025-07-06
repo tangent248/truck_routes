@@ -21,18 +21,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.firebase.FirebaseApp
 import com.group_7.truck_routes.R
 import com.group_7.truck_routes.Routs
+import com.group_7.truck_routes.data.FireBaseRepository
 
 @Composable
 fun Loginscreen(navController: NavController) {
 
+    val context = LocalContext.current
+    FirebaseApp.initializeApp(context)
 
     var email by remember {
         mutableStateOf(value = "")
@@ -66,23 +71,41 @@ fun Loginscreen(navController: NavController) {
             Text(text = "Password")
         }, visualTransformation = PasswordVisualTransformation())
         Spacer(modifier = Modifier.height(16.dp))
+
         Button(onClick = {
-            Log.i("Credential", "Email: $email Password: $password")
-            if (email.isNotEmpty() && password.isNotEmpty()) {
-                navController.navigate(
-                    Routs.Home
-                )
-            } else {
-                Toast.makeText(
-                    navController.context,
-                    "Please fill all the fields",
-                    Toast.LENGTH_SHORT
-                ).show()
+            val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")
+
+            when {
+                email.isEmpty() || password.isEmpty() -> {
+                    Toast.makeText(context, "Please fill all the fields", Toast.LENGTH_SHORT).show()
+                }
+
+                !email.matches(emailRegex) -> {
+                    Toast.makeText(context, "Invalid email format", Toast.LENGTH_SHORT).show()
+                }
+
+                password.length < 6 -> {
+                    Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+                }
+
+                else -> {
+                    Log.i("Credential", "Email: $email Password: $password")
+                    FireBaseRepository.validateUserLogin(email, password) { success, user ->
+                        if (success) {
+                            Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+                            navController.navigate(Routs.Home)
+                        } else {
+                            Toast.makeText(context, "Invalid credentials", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             }
         }) {
-            Text(text = "Login")
+            Text("Login")
         }
+
         Spacer(modifier = Modifier.height(16.dp))
+
         Text(text = "Forgot Password ?", Modifier.clickable {
         })
         Spacer(modifier = Modifier.height(32.dp))

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1026593111205",
+    "project_id": "device-streaming-f0ad5260",
+    "storage_bucket": "device-streaming-f0ad5260.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1026593111205:android:5afa009f115649bfdfe14c",
+        "android_client_info": {
+          "package_name": "com.group_7.truck_routes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAAYMFHFv53gsUHdhWf30lv6d2oBomXuo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

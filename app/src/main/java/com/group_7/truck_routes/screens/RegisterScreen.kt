@@ -1,6 +1,7 @@
 package com.group_7.truck_routes.screens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -17,10 +19,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.group_7.truck_routes.R
+import com.group_7.truck_routes.data.FireBaseRepository
+import com.group_7.truck_routes.data.UserData
 
 
 @Composable
 fun Registerscreen(navController: NavController) {
+
+    val context = LocalContext.current
 
     var email by remember {
         mutableStateOf(value = "")
@@ -60,10 +66,31 @@ fun Registerscreen(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            Log.i("Credential", "Email: $email Password: $password")
+            val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")
+
+            when {
+                email.isEmpty() || password.isEmpty() -> {
+                    Toast.makeText(context, "All fields are required", Toast.LENGTH_SHORT).show()
+                }
+
+                !email.matches(emailRegex) -> {
+                    Toast.makeText(context, "Invalid email format", Toast.LENGTH_SHORT).show()
+                }
+
+                password.length < 6 -> {
+                    Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+                }
+
+                else -> {
+                    FireBaseRepository.addUserData(UserData(email = email, password = password))
+                    navController.popBackStack()
+                    Toast.makeText(context, "Register Successful", Toast.LENGTH_SHORT).show()
+                }
+            }
         }) {
             Text(text = "Register")
         }
+
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -77,6 +104,7 @@ fun Registerscreen(navController: NavController) {
                 fontWeight = FontWeight.Bold,
                 color = androidx.compose.ui.graphics.Color.Blue,
                 modifier = Modifier.clickable {
+                    navController.popBackStack()
 
                     Log.i("Navigation", "Login Clicked")
                 }
