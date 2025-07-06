@@ -22,39 +22,44 @@ fun SearchBar(
     modifier: Modifier = Modifier,
     onPlaceSelected: (String) -> Unit
 ) {
-    // Determine the appropriate text color based on the current theme
     val textColor = if (isSystemInDarkTheme()) Color.White else Color.Black
+    val backgroundColor = if (isSystemInDarkTheme()) Color(0xFF2C2C2C) else Color(0xFFF5F5F5)
 
-    // Use AndroidView to integrate an Android View (AutoCompleteTextView) into Jetpack Compose
     AndroidView(
         factory = { context ->
             AutoCompleteTextView(context).apply {
-                hint = "Search for a place" // Set the hint text for the search bar
+                hint = "Search for a place"
 
-                // Set the text color and hint text color based on the current theme
+                // Style
                 setTextColor(textColor.toArgb())
-                setHintTextColor(textColor.copy(alpha = 0.6f).toArgb()) // Set hint text color with some transparency
+                setHintTextColor(textColor.copy(alpha = 0.6f).toArgb())
+                background = context.getDrawable(android.R.drawable.edit_text)
+                setBackgroundColor(backgroundColor.toArgb()) // ✅ Now used
+                setPadding(40, 30, 40, 30)
+                textSize = 16f
+                elevation = 10f
 
-                // Set the layout params to ensure the view takes up the full width
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
 
-                // Initialize the Places API and the Autocomplete Adapter
-                val autocompleteAdapter = ArrayAdapter<String>(context, android.R.layout.simple_dropdown_item_1line)
+                val autocompleteAdapter = ArrayAdapter<String>(
+                    context,
+                    android.R.layout.simple_dropdown_item_1line
+                )
                 val placesClient = Places.createClient(context)
-                val autocompleteSessionToken = AutocompleteSessionToken.newInstance()
+                val sessionToken = AutocompleteSessionToken.newInstance()
 
-                // Add a text change listener to capture and handle the user's input
                 addTextChangedListener(object : android.text.TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                    override fun afterTextChanged(s: android.text.Editable?) {}
 
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                        val query = s?.toString() ?: ""
+                        val query = s?.toString() ?: return
                         if (query.isNotEmpty()) {
                             val request = FindAutocompletePredictionsRequest.builder()
-                                .setSessionToken(autocompleteSessionToken)
+                                .setSessionToken(sessionToken)
                                 .setQuery(query)
                                 .build()
 
@@ -68,24 +73,18 @@ fun SearchBar(
                                 }
                         }
                     }
-
-                    override fun afterTextChanged(s: android.text.Editable?) {}
                 })
 
-                // Set the adapter to the AutoCompleteTextView to display suggestions
                 setAdapter(autocompleteAdapter)
 
-                // Set an item click listener to handle when the user selects a suggestion
                 setOnItemClickListener { _, _, position, _ ->
                     val selectedPlace = autocompleteAdapter.getItem(position) ?: return@setOnItemClickListener
-
-                    // Call the callback function to handle the selected place
                     onPlaceSelected(selectedPlace)
                 }
             }
         },
-        modifier = modifier // Apply the passed modifier to the AutoCompleteTextView
-            .fillMaxWidth() // Make sure the composable fills the maximum width available
-            .padding(16.dp) //  Add padding to the search bar
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp)
     )
 }
