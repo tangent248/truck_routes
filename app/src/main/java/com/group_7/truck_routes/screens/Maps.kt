@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -68,19 +69,12 @@ import com.google.android.gms.maps.model.LatLng as GmsLatLng
 @Composable
 fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, route: String) {
     val context = LocalContext.current
-    val cameraPositionState = rememberCameraPositionState()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val apiService: ApiService by lazy { RetrofitInstance.getApiService() }
 
     val userLocation by mapViewModel.userLocation
     val bearing by mapViewModel.bearing
 
-    var postsSpeed by remember { mutableStateOf<List<Route>>(emptyList()) }
-    var postsSpeedToStartPoint by remember { mutableStateOf<List<Route>>(emptyList()) }
-    var postsMileage by remember { mutableStateOf<List<Route>>(emptyList()) }
-    var postsMileageToStartPoint by remember { mutableStateOf<List<Route>>(emptyList()) }
-    var postsAvoidToll by remember { mutableStateOf<List<Route>>(emptyList()) }
-    var postsAvoidTollToStartPoint by remember { mutableStateOf<List<Route>>(emptyList()) }
 
     var polylinePoints by remember { mutableStateOf<List<GmsLatLng>>(emptyList()) }
     var polylinePointsToStartPoint by remember { mutableStateOf<List<GmsLatLng>>(emptyList()) }
@@ -114,7 +108,7 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            mapViewModel.fetchUserLocation(context, fusedLocationClient)
+            mapViewModel.startUpdatingLocationPeriodically(context, fusedLocationClient)
         } else {
             Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
         }
@@ -217,13 +211,6 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
             val responseAvoidToll = apiService.getRoutes(routeRequestAvoidToll)
             val responseAvoidTollToStart = apiService.getRoutes(routeRequestAvoidTollToStartPoint)
 
-            postsSpeed = responseSpeed.routes
-            postsSpeedToStartPoint = responseSpeedToStart.routes
-            postsMileage = responseMileage.routes
-            postsMileageToStartPoint = responseMileageToStart.routes
-            postsAvoidToll = responseAvoidToll.routes
-            postsAvoidTollToStartPoint = responseAvoidTollToStart.routes
-
 
             val routeSelected = when (route) {
                 "speed" -> responseSpeed
@@ -258,6 +245,23 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
         val mapProperties = remember {
             MapProperties(mapType = MapType.HYBRID)
         }
+        val cameraPositionState = rememberCameraPositionState()
+
+        LaunchedEffect(Unit) {
+            snapshotFlow { mapViewModel.userLocation.value }
+                .collect { location ->
+                    location?.let {
+                        cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(it, 18f))
+                    }
+                }
+        }
+        val userMarkerState = remember { MarkerState() }
+
+        LaunchedEffect(userLocation) {
+            userLocation?.let {
+                userMarkerState.position = it
+            }
+        }
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
@@ -266,20 +270,15 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
                 zoomControlsEnabled = false
             )
         ) {
-            userLocation?.let {
-                Marker(
-                    state = MarkerState(position = it),
-                    title = "Your Location",
-                    icon = BitmapDescriptorFactory.fromResource(R.drawable.arrow),
-                    rotation = bearing,  /*if (isRotationEnabled) bearing else 0f,*/
-                    flat = true
-                )
-                LaunchedEffect(userLocation) {
-                    userLocation?.let {
-                        cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(it, 18f))
-                    }
-                }
-            }
+
+
+            Marker(
+                state = userMarkerState,
+                title = "Your Location",
+                icon = BitmapDescriptorFactory.fromResource(R.drawable.arrow),
+                rotation = bearing,
+                flat = true
+            )
 
             stringToLocation(destination)?.latLng?.let {
                 Marker(
