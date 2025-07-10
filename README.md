@@ -19,8 +19,8 @@ Although it’s a prototype, it lays the foundation for a fully integrated navig
 
 ## 🚀 Features
 
-- 📍 **Search by location name**: Just type in city names or coordinates.
-- 🛣️ **Custom routing** using Google’s Directions API.
+- 📍 **Search by location name**: Just type in city names.
+- 🛣️ **Custom routing** using Google’s routes API.
 - ⚙️ **Route preferences**:
   - **Speed** – the fastest route considering traffic
   - **Mileage** – the shortest route to save fuel
@@ -51,7 +51,6 @@ Although it’s a prototype, it lays the foundation for a fully integrated navig
 | Location          | Fused Location Provider API   |
 | Networking        | Retrofit                      |
 | API               | Google Routes API             |
-| State Management  | ViewModel + State             |
 
 ---
 
@@ -67,12 +66,6 @@ The idea was to create a working **concept demo** of a truck-focused navigation 
 
 The project helped validate that custom routing logic and map rendering could be tailored for **commercial logistics and transportation**.
 
----
 
-## 🛠️ How to Run the Project
 
-### ✅ Prerequisites
-
-- Android Studio (Hedgehog or later)
-- Google Maps API key
 
