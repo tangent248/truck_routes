@@ -1,6 +1,9 @@
 package com.group_7.truck_routes.screens
 
+import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,7 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import com.google.android.gms.location.LocationServices
 import com.google.android.libraries.places.api.Places
 import com.group_7.truck_routes.Routs
 import com.group_7.truck_routes.components.SearchBar
@@ -35,15 +40,42 @@ fun Home(mapViewModel: MapViewModel, navController: NavController) {
     var userStartPoint by remember { mutableStateOf("") }
     var userDestination by remember { mutableStateOf("") }
     var loadTons by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
     val selectedStartLocation by mapViewModel.selectedStartLocation
     val selectedDestinationLocation by mapViewModel.selectedDestinationLocation
 
-    val context = LocalContext.current
     val apiKey = ManifestUtils.getApiKeyFromManifest(context)
 
     if (!Places.isInitialized() && apiKey != null) {
         Places.initialize(context.applicationContext, apiKey)
+    }
+
+    // Request user location permission
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            mapViewModel.startUpdatingLocationPeriodically(context, fusedLocationClient)
+        } else {
+            Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            )
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            mapViewModel.startUpdatingLocationPeriodically(context, fusedLocationClient)
+        } else {
+            permissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+        }
     }
 
     LaunchedEffect(selectedStartLocation) {

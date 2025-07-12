@@ -69,7 +69,7 @@ import com.google.android.gms.maps.model.LatLng as GmsLatLng
 @Composable
 fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, route: String) {
     val context = LocalContext.current
-    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
     val apiService: ApiService by lazy { RetrofitInstance.getApiService() }
 
     val userLocation by mapViewModel.userLocation
@@ -103,29 +103,7 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
         mapViewModel.startCompass(context)
     }
 
-    // Request user location permission
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            mapViewModel.startUpdatingLocationPeriodically(context, fusedLocationClient)
-        } else {
-            Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
-        }
-    }
 
-    LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            )
-            == PackageManager.PERMISSION_GRANTED
-        ) {
-            mapViewModel.startUpdatingLocationPeriodically(context, fusedLocationClient)
-        } else {
-            permissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
-        }
-    }
 
     LaunchedEffect(userLocation) {
         val originLocation = stringToLocation(startPoint)
@@ -163,7 +141,7 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
             origin = Origin(originLocation),
             destination = Destination(destinationLocation),
             travelMode = "DRIVE",
-            routingPreference = "TRAFFIC_AWARE",
+            routingPreference = "TRAFFIC_AWARE_OPTIMAL",
             computeAlternativeRoutes = false,
             routeModifiers = RouteModifiers(false, true, false),
             languageCode = "en-US",
@@ -174,7 +152,7 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
             origin = Origin(userLocWrapped),
             destination = Destination(originLocation),
             travelMode = "DRIVE",
-            routingPreference = "TRAFFIC_AWARE",
+            routingPreference = "TRAFFIC_AWARE_OPTIMAL",
             computeAlternativeRoutes = false,
             routeModifiers = RouteModifiers(false, true, false),
             languageCode = "en-US",
@@ -184,7 +162,7 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
             origin = Origin(originLocation),
             destination = Destination(destinationLocation),
             travelMode = "DRIVE",
-            routingPreference = "TRAFFIC_AWARE",
+            routingPreference = "TRAFFIC_AWARE_OPTIMAL",
             computeAlternativeRoutes = false,
             routeModifiers = RouteModifiers(false, false, true),
             languageCode = "en-US",
@@ -195,7 +173,7 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
             origin = Origin(userLocWrapped),
             destination = Destination(originLocation),
             travelMode = "DRIVE",
-            routingPreference = "TRAFFIC_AWARE",
+            routingPreference = "TRAFFIC_AWARE_OPTIMAL",
             computeAlternativeRoutes = false,
             routeModifiers = RouteModifiers(false, false, true),
             languageCode = "en-US",
