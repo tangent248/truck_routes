@@ -71,8 +71,8 @@ class MapViewModel : ViewModel() {
             != PackageManager.PERMISSION_GRANTED) return
 
         val locationRequest = LocationRequest.create().apply {
-            interval = 3000
-            fastestInterval = 2000
+            interval = 10000
+            fastestInterval = 10000
             priority = Priority.PRIORITY_HIGH_ACCURACY
         }
 
@@ -88,11 +88,11 @@ class MapViewModel : ViewModel() {
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback!!, Looper.getMainLooper())
     }
 
-    fun stopLocationUpdates(fusedLocationClient: FusedLocationProviderClient) {
-        locationCallback?.let {
-            fusedLocationClient.removeLocationUpdates(it)
-        }
-    }
+//    fun stopLocationUpdates(fusedLocationClient: FusedLocationProviderClient) {
+//        locationCallback?.let {
+//            fusedLocationClient.removeLocationUpdates(it)
+//        }
+//    }
 
     fun startCompass(context: Context) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager

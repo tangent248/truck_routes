@@ -1,11 +1,9 @@
 package com.group_7.truck_routes.screens
 
 
-import android.content.pm.PackageManager
+
 import android.util.Log
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,8 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.PolyUtil
@@ -63,6 +59,7 @@ import com.group_7.truck_routes.model.PostRequest
 import com.group_7.truck_routes.model.Route
 import com.group_7.truck_routes.model.RouteModifiers
 import com.group_7.truck_routes.viewModel.MapViewModel
+import kotlinx.coroutines.delay
 import com.google.android.gms.maps.model.LatLng as GmsLatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,13 +76,14 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
     var polylinePoints by remember { mutableStateOf<List<GmsLatLng>>(emptyList()) }
     var polylinePointsToStartPoint by remember { mutableStateOf<List<GmsLatLng>>(emptyList()) }
 
-//    var isRotationEnabled by remember { mutableStateOf(false) }
+
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
     var selectedRouteInfo by remember { mutableStateOf<Route?>(null) }
 
+    var animatedLatLng by remember { mutableStateOf<GmsLatLng?>(null) }
 
     // Helper function to convert a "lat,lng" string to Location object
     fun stringToLocation(input: String): Location? {
@@ -216,12 +214,12 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
             }
 
         } catch (e: Exception) {
-            Toast.makeText(context, "Route API error: ${e.message}", Toast.LENGTH_LONG).show()
+            Log.e("RouteAPI", "Route API error", e)
         }
     }
     Box(modifier = Modifier.fillMaxSize()) {
         val mapProperties = remember {
-            MapProperties(mapType = MapType.HYBRID)
+            MapProperties(mapType = MapType.TERRAIN)
         }
         val cameraPositionState = rememberCameraPositionState()
 
@@ -236,10 +234,28 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
         val userMarkerState = remember { MarkerState() }
 
         LaunchedEffect(userLocation) {
-            userLocation?.let {
-                userMarkerState.position = it
+            val start = animatedLatLng
+            val end = userLocation?.let { GmsLatLng(it.latitude, it.longitude) }
+
+            if (start != null && end != null) {
+                val durationMillis = 1000L
+                val frameCount = 60
+                val delayPerFrame = durationMillis / frameCount
+
+                for (i in 1..frameCount) {
+                    val fraction = i / frameCount.toFloat()
+                    val lat = start.latitude + fraction * (end.latitude - start.latitude)
+                    val lng = start.longitude + fraction * (end.longitude - start.longitude)
+                    animatedLatLng = GmsLatLng(lat, lng)
+                    userMarkerState.position = animatedLatLng!!
+                    delay(delayPerFrame)
+                }
+            } else if (end != null) {
+                animatedLatLng = end
+                userMarkerState.position = end
             }
         }
+
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
@@ -310,15 +326,7 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
                 .padding(16.dp),
             horizontalArrangement = Arrangement.End
         ) {
-//            Button(
-//                onClick = { isRotationEnabled = !isRotationEnabled },
-//
-//            ) {
-//                Icon(
-//                    imageVector = if (isRotationEnabled) Icons.Default.Close else Icons.Default.Check,
-//                    contentDescription = if (isRotationEnabled) "Freeform Mode" else "Center Mode"
-//                )
-//            }
+
             Button(
                 onClick = { showBottomSheet = true },
 
