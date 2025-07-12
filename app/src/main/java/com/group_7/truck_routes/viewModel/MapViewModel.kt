@@ -7,6 +7,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.location.Geocoder
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.State
@@ -15,14 +16,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MapViewModel: ViewModel() {
+class MapViewModel : ViewModel() {
 
     private val _selectedStartLocation = mutableStateOf<LatLng?>(null)
     val selectedStartLocation: State<LatLng?> = _selectedStartLocation
@@ -30,7 +30,13 @@ class MapViewModel: ViewModel() {
     private val _selectedDestinationLocation = mutableStateOf<LatLng?>(null)
     val selectedDestinationLocation: State<LatLng?> = _selectedDestinationLocation
 
+    private val _userLocation = mutableStateOf<LatLng?>(null)
+    val userLocation: State<LatLng?> = _userLocation
 
+    private val _bearing = mutableFloatStateOf(0f)
+    val bearing: State<Float> = _bearing
+
+    private var locationCallback: LocationCallback? = null
 
     fun selectStartLocation(place: String, context: Context) {
         geocodePlace(place, context) { latLng ->
@@ -60,43 +66,33 @@ class MapViewModel: ViewModel() {
         }
     }
 
-
-
-    // State to hold the user's location as LatLng (latitude and longitude)
-    private val _userLocation = mutableStateOf<LatLng?>(null)
-    val userLocation: State<LatLng?> = _userLocation
-
-
-    // Function to fetch the user's location and update the state
     fun startUpdatingLocationPeriodically(context: Context, fusedLocationClient: FusedLocationProviderClient) {
-        viewModelScope.launch {
-            while (true) {
-                fetchUserLocation(context, fusedLocationClient)
-                delay(10_000L)
-            }
+        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) return
+
+        val locationRequest = LocationRequest.create().apply {
+            interval = 3000
+            fastestInterval = 2000
+            priority = Priority.PRIORITY_HIGH_ACCURACY
         }
-    }
 
-    fun fetchUserLocation(context: Context, fusedLocationClient: FusedLocationProviderClient) {
-        // Check if the location permission is granted
-        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    location?.let {
-
-                        _userLocation.value  = LatLng(it.latitude, it.longitude)
-
-                    }
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                val location = locationResult.lastLocation
+                location?.let {
+                    _userLocation.value = LatLng(it.latitude, it.longitude)
                 }
-            } catch (e: SecurityException) {
-                Toast.makeText(context, "Permission for location access was revoked.", Toast.LENGTH_SHORT).show()
             }
-        } else {
-            Toast.makeText(context, "Location permission is not granted.", Toast.LENGTH_SHORT).show()
+        }
+
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback!!, Looper.getMainLooper())
+    }
+
+    fun stopLocationUpdates(fusedLocationClient: FusedLocationProviderClient) {
+        locationCallback?.let {
+            fusedLocationClient.removeLocationUpdates(it)
         }
     }
-    private val _bearing = mutableFloatStateOf(0f)
-    val bearing: State<Float> = _bearing
 
     fun startCompass(context: Context) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager

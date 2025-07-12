@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,7 +64,7 @@ fun RouteSelectionScreen(navController: NavController,
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val apiService = remember { RetrofitInstance.getApiService() }
 
-    var userLocation by remember { mutableStateOf<LatLng?>(null) }
+
     var routes by remember { mutableStateOf<Map<String, Route?>>(emptyMap()) }
 
     var startAddress by remember { mutableStateOf<String?>(null) }
@@ -115,7 +117,7 @@ fun RouteSelectionScreen(navController: NavController,
 
                     val loc = fusedLocationClient.lastLocation.await()
                     val userLatLng = LatLng(loc.latitude, loc.longitude)
-                    userLocation = userLatLng
+
 
                     val (speed, mileage, toll) = fetchRouteOptions(
                         apiService,
@@ -150,6 +152,7 @@ fun RouteSelectionScreen(navController: NavController,
 
         item {
             Text(
+                color = MaterialTheme.colorScheme.onSurface,
                 text = "${startAddress ?: "Start"} 🚛 ➡️ ${destinationAddress ?: "Destination"}",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
@@ -160,6 +163,7 @@ fun RouteSelectionScreen(navController: NavController,
 
         item {
             Text(
+                color = MaterialTheme.colorScheme.onSurface,
                 text = "Choose your preferred route option",
                 fontSize = 14.sp,
                 modifier = Modifier.fillMaxWidth(),
@@ -310,7 +314,8 @@ fun RouteCard(
             .padding(8.dp)
             .fillMaxWidth(),
         onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSystemInDarkTheme()) Color(0xFF3A3A3A) else Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -322,7 +327,7 @@ fun RouteCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = title, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+                Text(color = MaterialTheme.colorScheme.onSurface,text = title, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
 
                 tag?.let {
                     Box(
@@ -358,7 +363,7 @@ fun RouteCard(
                         fontSize = 20.sp,
                         color = Color(0xFF007BFF)
                     )
-                    Text(text = "Distance", fontSize = 12.sp)
+                    Text(color = MaterialTheme.colorScheme.onSurface,text = "Distance", fontSize = 12.sp)
                 }
                 Column {
                     Text(
@@ -367,7 +372,7 @@ fun RouteCard(
                         fontSize = 20.sp,
                         color = Color(0xFF007BFF)
                     )
-                    Text(text = "Est. Fuel Cost", fontSize = 12.sp)
+                    Text(color = MaterialTheme.colorScheme.onSurface,text = "Est. Fuel Cost", fontSize = 12.sp)
                 }
             }
 
@@ -378,7 +383,7 @@ fun RouteCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Description
-            Text(text = description, fontSize = 12.sp)
+            Text(color = MaterialTheme.colorScheme.onSurface,text = description, fontSize = 12.sp)
 
             Spacer(modifier = Modifier.height(16.dp))
 
