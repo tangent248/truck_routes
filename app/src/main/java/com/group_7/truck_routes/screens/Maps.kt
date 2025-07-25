@@ -219,7 +219,7 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
     }
     Box(modifier = Modifier.fillMaxSize()) {
         val mapProperties = remember {
-            MapProperties(mapType = MapType.TERRAIN)
+            MapProperties(mapType = MapType.HYBRID)
         }
         val cameraPositionState = rememberCameraPositionState()
 
@@ -227,10 +227,21 @@ fun Maps(mapViewModel: MapViewModel, startPoint: String, destination: String, ro
             snapshotFlow { mapViewModel.userLocation.value }
                 .collect { location ->
                     location?.let {
-                        cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(it, 18f))
+                        cameraPositionState.animate(
+                            update = CameraUpdateFactory.newCameraPosition(
+                                com.google.android.gms.maps.model.CameraPosition.Builder()
+                                    .target(it)
+                                    .zoom(18f)
+                                    .bearing(bearing)
+                                    .tilt(30f)
+                                    .build()
+                            ),
+                            durationMs = 1000
+                        )
                     }
                 }
         }
+
         val userMarkerState = remember { MarkerState() }
 
         LaunchedEffect(userLocation) {

@@ -71,8 +71,8 @@ class MapViewModel : ViewModel() {
             != PackageManager.PERMISSION_GRANTED) return
 
         val locationRequest = LocationRequest.create().apply {
-            interval = 10000
-            fastestInterval = 10000
+            interval = 3000
+            fastestInterval = 2000
             priority = Priority.PRIORITY_HIGH_ACCURACY
         }
 
